@@ -2,27 +2,30 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useUser, SignInButton, UserButton } from '@clerk/nextjs';
 
-export default function AdminNavbar() {
+export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname(); // Get the current route
+  const { isSignedIn } = useUser(); // Check if the user is signed in
 
   const navItems = [
-    { name: 'All Products', path: '/admin/products' },
-    { name: 'Order Details', path: '/admin/orders' },
-    { name: 'All Users', path: '/admin/all-users' },
+    { name: 'Home', path: '/' },
+    { name: 'Products', path: '/products' },
+    { name: 'Cart 🛒', path: '/cart' },
+    { name: 'Orders 📄', path: '/orders' },
   ];
 
   return (
-    <header className="bg-[#002512] text-gray-200">
-      <div className="flex justify-between items-center px-6 py-4 sm:px-10">
+    <header className="bg-[#2D332F] text-gray-200">
+      <div className="flex justify-between items-center px-6 py-4 sm:px-20">
         {/* Logo */}
         <h1
-          className="text-xl font-bold cursor-pointer sm:text-2xl"
-          onClick={() => router.push('/admin/products')}
+          className="text-xl font-bold font-serif sm:text-2xl italic cursor-pointer"
+          onClick={() => router.push('/')}
         >
-          Admin Dashboard
+          Callin' All F
         </h1>
 
         {/* Hamburger Menu Toggle for Mobile */}
@@ -35,7 +38,7 @@ export default function AdminNavbar() {
         </button>
 
         {/* Desktop Navigation */}
-        <nav className="hidden sm:flex space-x-6">
+        <nav className="hidden sm:flex space-x-6 items-center">
           {navItems.map((item, index) => (
             <button
               key={index}
@@ -49,12 +52,23 @@ export default function AdminNavbar() {
               {item.name}
             </button>
           ))}
+
+          {/* Authentication Buttons */}
+          {isSignedIn ? (
+            <UserButton />
+          ) : (
+            <SignInButton>
+              <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                Sign In
+              </button>
+            </SignInButton>
+          )}
         </nav>
       </div>
 
       {/* Mobile Navigation */}
       {isMenuOpen && (
-        <nav className="sm:hidden bg-gray-800 text-gray-200 px-6 py-4">
+        <nav className="sm:hidden bg-[#2D332F] text-gray-200 px-6 py-4">
           {navItems.map((item, index) => (
             <button
               key={index}
@@ -71,6 +85,21 @@ export default function AdminNavbar() {
               {item.name}
             </button>
           ))}
+
+          {/* Authentication Buttons */}
+          <div className="mt-4">
+            {isSignedIn ? (
+              <div>
+                <UserButton />
+              </div>
+            ) : (
+              <SignInButton>
+                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md w-full">
+                  Sign In
+                </button>
+              </SignInButton>
+            )}
+          </div>
         </nav>
       )}
     </header>

@@ -1,19 +1,23 @@
+'use client';
+
 import './globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
-
-export const metadata = {
-  title: 'E-Commerce Website',
-  description: 'E-commerce site with Next.js App Router',
-};
+import Navbar from '@/components/Navbar';
+import { usePathname } from 'next/navigation';
 
 export default function RootLayout({ children }) {
+  const pathname = usePathname();
+
+  // Determine if it's an admin page to conditionally hide the navbar
+  const isAdminPage = pathname?.startsWith('/admin');
+
   return (
     <html lang="en">
-      <body>
-      <ClerkProvider>
-        {children}
-     </ClerkProvider>
-
+      <body className="min-h-screen bg-[#EEECED]">
+        <ClerkProvider>
+          {!isAdminPage && <Navbar />}
+          <main>{children}</main>
+        </ClerkProvider>
       </body>
     </html>
   );

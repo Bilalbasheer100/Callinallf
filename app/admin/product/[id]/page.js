@@ -33,7 +33,7 @@ export default function ProductDetails() {
     <div className="p-8 bg-gray-50 min-h-screen">
       <button
         className="mb-6 bg-gray-800 text-white px-4 py-2 rounded-md shadow hover:bg-gray-900"
-        onClick={() => router.push('/products')}
+        onClick={() => router.push('/admin/products')}
       >
         ← Back to Products
       </button>

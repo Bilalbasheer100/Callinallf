@@ -14,9 +14,10 @@ export default function AddForm() {
     price: '',
     description: '',
     category: '',
-    imageUrl: '' // To store uploaded image URL
+    imageUrl: '', // To store uploaded image URL
   });
 
+  const [errors, setErrors] = useState({});
   const [isUploading, setIsUploading] = useState(false); // Upload state
   const router = useRouter();
 
@@ -28,11 +29,34 @@ export default function AddForm() {
     }
   };
 
+  // Validate Form Fields
+  const validateForm = () => {
+    const validationErrors = {};
+
+    if (!form.name.trim()) {
+      validationErrors.name = "Product name is required.";
+    }
+    if (!form.price || isNaN(form.price) || form.price <= 0) {
+      validationErrors.price = "Price must be a valid positive number.";
+    }
+    if (!form.description.trim()) {
+      validationErrors.description = "Description is required.";
+    }
+    if (!form.category.trim()) {
+      validationErrors.category = "Category is required.";
+    }
+    if (!form.imageUrl) {
+      validationErrors.imageUrl = "Please upload an image.";
+    }
+
+    setErrors(validationErrors);
+    return Object.keys(validationErrors).length === 0;
+  };
+
   // Add Product Handler
   const handleAddProduct = async () => {
-    if (!form.imageUrl) {
-      alert("Please upload an image before submitting the form.");
-      return;
+    if (!validateForm()) {
+      return; // Stop submission if validation fails
     }
 
     try {
@@ -54,63 +78,119 @@ export default function AddForm() {
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Add New Product</h1>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+      <div className="w-full max-w-3xl bg-white rounded-lg shadow-md p-6">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Add New Product</h1>
 
-      {/* Product Form Fields */}
-      <input
-        className="border p-2 w-full mb-2"
-        type="text"
-        placeholder="Product Name"
-        value={form.name}
-        onChange={(e) => setForm({ ...form, name: e.target.value })}
-      />
-      <input
-        className="border p-2 w-full mb-2"
-        type="number"
-        placeholder="Price"
-        value={form.price}
-        onChange={(e) => setForm({ ...form, price: e.target.value })}
-      />
-      <textarea
-        className="border p-2 w-full mb-2"
-        placeholder="Description"
-        value={form.description}
-        onChange={(e) => setForm({ ...form, description: e.target.value })}
-      />
-      <input
-        className="border p-2 w-full mb-2"
-        type="text"
-        placeholder="Category"
-        value={form.category}
-        onChange={(e) => setForm({ ...form, category: e.target.value })}
-      />
+        {/* Product Form Fields */}
+        <div className="space-y-4">
+          <div>
+            <input
+              className={`w-full border rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 ${
+                errors.name ? "border-red-500 focus:ring-red-400" : "focus:ring-blue-400"
+              }`}
+              type="text"
+              placeholder="Product Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+          </div>
 
-      {/* Upload Image Section */}
-      <h2 className="text-lg font-semibold mb-2">Upload Product Image</h2>
-      {isUploading && <p className="text-blue-500">Uploading...</p>}
-      <UploadButton
-        endpoint="imageUploader"
-        onClientUploadComplete={(res) => {
-          handleImageUpload(res);
-          setIsUploading(false); // Stop uploading state
-        }}
-        onUploadError={(error) => {
-          console.error("Upload Error:", error.message);
-          setIsUploading(false);
-          alert("Failed to upload image. Please try again.");
-        }}
-        onUploadBegin={() => setIsUploading(true)} // Set uploading state
-      />
+          <div>
+            <input
+              className={`w-full border rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 ${
+                errors.price ? "border-red-500 focus:ring-red-400" : "focus:ring-blue-400"
+              }`}
+              type="number"
+              placeholder="Price"
+              value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value })}
+            />
+            {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
+          </div>
 
-      {/* Submit Button */}
-      <button
-        className="bg-blue-500 text-white px-4 py-2 mt-4"
-        onClick={handleAddProduct}
-        disabled={isUploading} // Prevent submission during upload
-      >
-        {isUploading ? "Uploading..." : "Add Product"}
-      </button>
+          <div>
+            <textarea
+              className={`w-full border rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 ${
+                errors.description ? "border-red-500 focus:ring-red-400" : "focus:ring-blue-400"
+              }`}
+              placeholder="Description"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+            {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+          </div>
+
+          {/* Modern Select Dropdown */}
+          <div className="relative">
+            <select
+              className={`appearance-none w-full border rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 ${
+                errors.category ? "border-red-500 focus:ring-red-400" : "focus:ring-blue-400"
+              }`}
+              value={form.category}
+              onChange={(e) => setForm({ ...form, category: e.target.value })}
+            >
+              <option value="" disabled>
+                Select Category
+              </option>
+              <option value="Clothes">Clothes</option>
+              <option value="Skin Care">Skin Care</option>
+              <option value="Fragrances">Fragrances</option>
+            </select>
+            <svg
+              className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none text-gray-400"
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+            </svg>
+            {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
+          </div>
+        </div>
+
+        {/* Upload Image Section */}
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">Upload Product Image</h2>
+          {isUploading && <p className="text-blue-500 mb-2">Uploading...</p>}
+          <UploadButton
+            endpoint="imageUploader"
+            onClientUploadComplete={(res) => {
+              handleImageUpload(res);
+              setIsUploading(false); // Stop uploading state
+            }}
+            onUploadError={(error) => {
+              console.error("Upload Error:", error.message);
+              setIsUploading(false);
+              alert("Failed to upload image. Please try again.");
+            }}
+            onUploadBegin={() => setIsUploading(true)} // Set uploading state
+          />
+          {errors.imageUrl && <p className="text-red-500 text-sm mt-1">{errors.imageUrl}</p>}
+          {form.imageUrl && (
+            <div className="mt-4">
+              <p className="text-gray-600 mb-2">Uploaded Image:</p>
+              <img
+                src={form.imageUrl}
+                alt="Uploaded Product"
+                className="w-40 h-40 object-cover rounded-lg shadow-md border"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Submit Button */}
+        <button
+          className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg shadow hover:bg-blue-700 transition-all disabled:bg-blue-300"
+          onClick={handleAddProduct}
+          disabled={isUploading} // Prevent submission during upload
+        >
+          {isUploading ? "Uploading..." : "Add Product"}
+        </button>
+      </div>
     </div>
   );
 }
