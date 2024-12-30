@@ -6,7 +6,6 @@ import { useGSAP } from '@gsap/react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
-
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const router = useRouter();
@@ -31,11 +30,8 @@ export default function Home() {
   const handleAddToCart = async (product) => {
     try {
       const response = await axios.post('/api/cart', {
-        name: product.name,
-        price: product.price,
+        productId: product._id, // Updated to use productId
         quantity: 1,
-        category: product.category,
-        image: product.image,
       });
 
       if (response.status === 201 || response.status === 200) {
@@ -67,6 +63,7 @@ export default function Home() {
       <section className="mt-12 px-6 sm:px-16">
         {/* Mobile Layout */}
         <div className="grid grid-cols-2 gap-4 mb-4 sm:hidden">
+          {/* Clothes */}
           <div className="collection-item bg-white rounded-lg shadow-md overflow-hidden h-[24rem]">
             <a href="/clothes" className="block h-full">
               <img
@@ -79,6 +76,7 @@ export default function Home() {
               </div>
             </a>
           </div>
+          {/* Skin Care */}
           <div className="collection-item bg-white rounded-lg shadow-md overflow-hidden h-[24rem]">
             <a href="/skincare" className="block h-full">
               <img
@@ -93,6 +91,7 @@ export default function Home() {
           </div>
         </div>
         <div className="col-span-2 sm:hidden collection-item bg-white rounded-lg shadow-md overflow-hidden h-[50rem]">
+          {/* Fragrances */}
           <a href="/fragrances" className="block h-full">
             <img
               src="/fragrances.jpg"
@@ -203,25 +202,23 @@ export default function Home() {
         </div>
       </section>
 
-{/* Subscribe Section */}
-<footer className="bg-[#2D332F] text-white mt-12 py-8 px-6 text-center sm:px-16">
-<h3 className="text-lg font-bold sm:text-xl">Subscribe to our emails</h3>
-<p className="mt-2 text-xs sm:text-sm">
-  Subscribe to our mailing list for insider news, product launches, and more.
-</p>
-<div className="mt-4 flex sm:flex-row justify-center">
-  <input
-    type="email"
-    placeholder="Email"
-    className="p-2 rounded-l-md rounded-t-none border border-gray-300 focus:outline-none"
-  />
-  <button className="bg-[#949391] text-white px-4 py-2 rounded-r-md rounded-b-none">
-    →
-  </button>
-</div>
-</footer>
+      {/* Subscribe Section */}
+      <footer className="bg-[#2D332F] text-white mt-12 py-8 px-6 text-center sm:px-16">
+        <h3 className="text-lg font-bold sm:text-xl">Subscribe to our emails</h3>
+        <p className="mt-2 text-xs sm:text-sm">
+          Subscribe to our mailing list for insider news, product launches, and more.
+        </p>
+        <div className="mt-4 flex sm:flex-row justify-center">
+          <input
+            type="email"
+            placeholder="Email"
+            className="p-2 rounded-l-md rounded-t-none border border-gray-300 focus:outline-none"
+          />
+          <button className="bg-[#949391] text-white px-4 py-2 rounded-r-md rounded-b-none">
+            →
+          </button>
+        </div>
+      </footer>
     </main>
   );
 }
-
-

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 
 export default function AllProducts() {
   const [products, setProducts] = useState([]);
@@ -14,6 +14,7 @@ export default function AllProducts() {
 
   const router = useRouter();
   const { isSignedIn, isLoaded } = useUser();
+  const { getToken } = useAuth();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -58,13 +59,20 @@ export default function AllProducts() {
     }
 
     try {
-      const response = await axios.post('/api/cart', {
-        name: product.name,
-        price: product.price,
-        quantity: 1,
-        category: product.category,
-        image: product.image,
-      });
+      const token = await getToken(); // Fetch the token from Clerk
+
+      const response = await axios.post(
+        '/api/cart',
+        {
+          productId: product._id, // Send product ID to backend
+          quantity: 1,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Pass JWT for authentication
+          },
+        }
+      );
 
       if (response.status === 201 || response.status === 200) {
         alert(`${product.name} added to cart!`);
@@ -105,9 +113,7 @@ export default function AllProducts() {
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
               >
-                <option value="" disabled>
-                  Select Category
-                </option>
+                <option value="">All Categories</option>
                 <option value="Clothes">Clothes</option>
                 <option value="Skin Care">Skin Care</option>
                 <option value="Fragrances">Fragrances</option>
@@ -171,7 +177,6 @@ export default function AllProducts() {
               key={product._id}
               className="bg-white rounded-xl shadow-lg p-4 flex flex-col items-center text-center transition transform hover:-translate-y-2"
             >
-              {/* Image */}
               <div className="w-40 h-40 sm:w-48 sm:h-48 mb-4 overflow-hidden rounded-lg border border-gray-200">
                 <img
                   src={product.image}
@@ -179,7 +184,6 @@ export default function AllProducts() {
                   className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
                 />
               </div>
-              {/* Details */}
               <h2 className="text-lg font-bold text-gray-800 mb-2">
                 {product.name}
               </h2>
