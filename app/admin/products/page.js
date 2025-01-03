@@ -39,38 +39,52 @@ export default function ProductList() {
 
   const handleFeatureToggle = (productId) => {
     setError('');
-    setFeatured((prevFeatured) =>
-      prevFeatured.includes(productId)
-        ? prevFeatured.filter((id) => id !== productId)
-        : prevFeatured.length < 4
-        ? [...prevFeatured, productId]
-        : prevFeatured
-    );
-    if (featured.length >= 4 && !featured.includes(productId)) {
+    setFeatured((prevFeatured) => {
+      if (prevFeatured.includes(productId)) {
+        return prevFeatured.filter((id) => id !== productId);
+      }
+  
+      if (prevFeatured.length < 4) {
+        return [...prevFeatured, productId];
+      }
+  
       setError('You can only select up to 4 featured items.');
-    }
+      return prevFeatured;
+    });
   };
+  
 
   const handleSaveFeatured = async () => {
     if (featured.length !== 4) {
       setError('You must select exactly 4 featured items.');
       return;
     }
-
+  
     try {
-      const updatePromises = products.map((product) =>
-        axios.put('/api/products', {
-          ...product,
-          featured: featured.includes(product._id),
-        })
-      );
-      await Promise.all(updatePromises);
-      alert('Featured items saved successfully!');
+      // Prepare the updated products with their new `featured` status
+      const updatedProducts = products.map((product) => ({
+        id: product._id,
+        name: product.name,
+        price: product.price,
+        category: product.category,
+        description: product.description,
+        image: product.image,
+        featured: featured.includes(product._id), // Set featured status based on state
+      }));
+  
+      // Send a single PUT request to update all products
+      const response = await axios.put('/api/products', updatedProducts);
+  
+      if (response.status === 200) {
+        alert('Featured items saved successfully!');
+      }
     } catch (err) {
       console.error('Error saving featured items:', err);
       setError('Failed to save featured items. Please try again.');
     }
   };
+  
+  
 
   const handleDeleteProduct = async (productId) => {
     try {
@@ -171,3 +185,5 @@ export default function ProductList() {
     </div>
   );
 }
+
+
