@@ -11,6 +11,7 @@ export default clerkMiddleware({
     '/sign-in(.*)', // Sign-in page and potential subpaths
     '/sign-up(.*)', // Sign-up page and potential subpaths
   ],
+  secretKey: process.env.CLERK_SECRET_KEY, // Ensure this is defined in your environment
 });
 
 // Middleware for role-based access control
@@ -36,11 +37,11 @@ export async function roleBasedMiddleware(req) {
     }
   }
 
-  // Public access to /products, but restrict Add to Cart API
+  // Restrict Add to Cart API to signed-in users only
   if (url.startsWith('/api/cart')) {
     if (!user) {
       // Restrict Add to Cart API to signed-in users only
-      return new Response('Unauthorized', { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
   }
 

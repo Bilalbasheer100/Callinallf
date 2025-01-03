@@ -74,53 +74,51 @@ export async function POST(req) {
 }
 
 // PUT (Update) a Product
-// PUT (Update) a Product
 export async function PUT(req) {
   try {
     await dbConnect();
-    const body = await req.json();
-    const { id, name, price, category, description, image, featured } = body;
+    const body = await req.json(); // Expect an array of products to update
 
-    // Validate required fields
-    if (!id || !name || !price || !category || !description || !image) {
-      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
+    if (!Array.isArray(body)) {
+      return NextResponse.json({ error: 'Invalid request format. Expected an array.' }, { status: 400 });
     }
 
-    // Validate the featured field logic
-    if (featured !== undefined) {
-      const currentFeaturedProduct = await Product.findById(id);
-      const featuredCount = await Product.countDocuments({ featured: true, _id: { $ne: id } });
+    const featuredUpdates = body.filter((product) => product.featured === true);
 
-      // Check if the current product is already featured
-      const isCurrentlyFeatured = currentFeaturedProduct?.featured;
-
-      // Restrict adding a new featured product if the count exceeds 4
-      if (featured && !isCurrentlyFeatured && featuredCount >= 4) {
-        return NextResponse.json(
-          { error: 'You can only have 4 featured products' },
-          { status: 400 }
-        );
-      }
+    // Check if more than 4 featured products are being set
+    if (featuredUpdates.length > 4) {
+      return NextResponse.json(
+        { error: 'You can only have 4 featured products' },
+        { status: 400 }
+      );
     }
 
-    // Update the product
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      { name, price, category, description, image, featured },
-      { new: true }
+    // Perform the batch update
+    const updatePromises = body.map((product) =>
+      Product.findByIdAndUpdate(
+        product.id,
+        {
+          name: product.name,
+          price: product.price,
+          category: product.category,
+          description: product.description,
+          image: product.image,
+          featured: product.featured,
+        },
+        { new: true }
+      )
     );
 
-    // Handle case where product is not found
-    if (!updatedProduct) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
-    }
+    const updatedProducts = await Promise.all(updatePromises);
 
-    return NextResponse.json(updatedProduct, { status: 200 });
+    return NextResponse.json(updatedProducts, { status: 200 });
   } catch (error) {
     console.error('PUT Error:', error);
-    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update products' }, { status: 500 });
   }
 }
+
+
 
 
 // DELETE a Product
