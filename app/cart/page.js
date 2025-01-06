@@ -127,7 +127,7 @@ export default function Cart() {
         {
           cartItems,
           metadata: {
-            userId: user?.id, // User ID
+            userId: user?.id, // Ensure userId is passed
             cartItems: JSON.stringify(cartItems), // Cart items as JSON string
           },
         },
@@ -162,7 +162,7 @@ export default function Cart() {
         {
           cartItems,
           metadata: {
-            userId: user?.id, // User ID
+            userId: user?.id, // Ensure userId is passed
             cartItems: JSON.stringify(cartItems), // Cart items as JSON string
           },
         },
