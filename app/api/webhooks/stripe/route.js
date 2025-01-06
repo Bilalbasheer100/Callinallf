@@ -125,8 +125,6 @@
 //   return new Response(JSON.stringify({ received: true }), { status: 200 });
 // }
 
-
-
 import { buffer } from 'micro';
 import Stripe from 'stripe';
 import dbConnect from '@/utils/mongoose';
@@ -136,7 +134,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const config = {
   api: {
-    bodyParser: false, // Stripe requires raw body
+    bodyParser: false,
   },
 };
 
@@ -144,10 +142,12 @@ export async function POST(req) {
   let event;
 
   try {
-    // Parse the raw body
-    const buf = await buffer(req);
-    const sig = req.headers['stripe-signature']; // Access header correctly
+    const buf = await buffer(req); // Parse the raw body
+    const sig = req.headers['stripe-signature']; // Get Stripe signature
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    console.log('Raw body:', buf.toString()); // Log raw body for debugging
+    console.log('Stripe Signature:', sig);
 
     // Verify the webhook signature
     event = stripe.webhooks.constructEvent(buf, sig, endpointSecret);
@@ -157,39 +157,31 @@ export async function POST(req) {
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  // Handle Stripe webhook events
+  // Handle the event
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object;
 
-      console.log('Checkout Session Completed Event:', session);
-
       try {
-        // Connect to the database
         await dbConnect();
-
-        // Store the order in the database
         const order = new Order({
           userId: session.metadata.userId,
           products: JSON.parse(session.metadata.cartItems),
-          totalAmount: session.amount_total / 100, // Convert cents to dollars
+          totalAmount: session.amount_total / 100, // Stripe uses cents
           paymentStatus: session.payment_status,
         });
 
         await order.save();
         console.log('Order saved successfully:', order);
       } catch (err) {
-        console.error('Error saving order to database:', err);
+        console.error('Error saving order to database:', err.message);
         return new Response('Error saving order', { status: 500 });
       }
       break;
     }
-
-    // Handle other event types
     default:
       console.log(`Unhandled event type: ${event.type}`);
   }
 
-  // Return success response to Stripe
   return new Response(JSON.stringify({ received: true }), { status: 200 });
 }
