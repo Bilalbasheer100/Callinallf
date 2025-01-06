@@ -18,7 +18,7 @@ export default function Cart() {
     const fetchCart = async () => {
       try {
         setError(null);
-        setIsLoading(true); // Set loading to true while fetching
+        setIsLoading(true);
         const token = await getToken();
         if (!token) throw new Error('Authentication token missing.');
 
@@ -30,13 +30,11 @@ export default function Cart() {
         console.error('Failed to fetch cart items:', err);
         setError('Failed to fetch cart items. Please try again.');
       } finally {
-        setIsLoading(false); // Always reset loading state
+        setIsLoading(false);
       }
     };
 
-    if (isSignedIn) {
-      fetchCart();
-    }
+    if (isSignedIn) fetchCart();
   }, [isSignedIn, getToken]);
 
   // Effect: Calculate total whenever cart changes
@@ -63,9 +61,7 @@ export default function Cart() {
       await axios.put(
         '/api/cart',
         { productId, quantity: newQuantity },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setCart((prevCart) => ({
@@ -117,7 +113,7 @@ export default function Cart() {
 
       const cartItems = [
         {
-          productId: productId,
+          productId,
           quantity: product.quantity,
         },
       ];
@@ -126,15 +122,13 @@ export default function Cart() {
         '/api/stripe',
         {
           cartItems,
+          metadata: {
+            userId: user?.id,
+            cartItems: JSON.stringify(cartItems),
+          },
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-          data: {
-            metadata: {
-              userId: user.id, // User ID
-              cartItems: JSON.stringify(cartItems), // Cart items as JSON string
-            },
-          },
         }
       );
 
@@ -142,7 +136,7 @@ export default function Cart() {
         window.location.href = response.data.url;
       }
     } catch (err) {
-      console.error('Checkout Error:', err);
+      console.error('Checkout Item Error:', err.response?.data || err.message);
       setError('Failed to proceed to checkout. Please try again.');
     }
   };
@@ -161,15 +155,15 @@ export default function Cart() {
 
       const response = await axios.post(
         '/api/stripe',
-        { cartItems },
+        {
+          cartItems,
+          metadata: {
+            userId: user?.id,
+            cartItems: JSON.stringify(cartItems),
+          },
+        },
         {
           headers: { Authorization: `Bearer ${token}` },
-          data: {
-            metadata: {
-              userId: user.id, // User ID
-              cartItems: JSON.stringify(cartItems), // Cart items as JSON string
-            },
-          },
         }
       );
 
@@ -177,7 +171,7 @@ export default function Cart() {
         window.location.href = response.data.url;
       }
     } catch (err) {
-      console.error('Checkout Error:', err);
+      console.error('Checkout All Error:', err.response?.data || err.message);
       setError('Failed to proceed to checkout. Please try again.');
     }
   };
