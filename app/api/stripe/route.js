@@ -9,10 +9,14 @@ export async function POST(req) {
   try {
     await dbConnect();
 
-    const { cartItems } = await req.json();
+    const { cartItems, userId } = await req.json();
 
     if (!cartItems || !cartItems.length) {
       return NextResponse.json({ error: 'No items in cart' }, { status: 400 });
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
     // Fetch products from the database to ensure accurate data
@@ -44,11 +48,18 @@ export async function POST(req) {
       mode: 'payment',
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cart`,
+      metadata: {
+        userId, // Pass userId as metadata
+        cartItems: JSON.stringify(cartItems), // Pass cart items as JSON string
+      },
     });
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error('Stripe Checkout Error:', error);
-    return NextResponse.json({ error: 'Failed to create Stripe checkout session' }, { status: 500 });
+    return NextResponse.json(
+      { error: `Failed to create Stripe checkout session: ${error.message}` },
+      { status: 500 }
+    );
   }
 }
