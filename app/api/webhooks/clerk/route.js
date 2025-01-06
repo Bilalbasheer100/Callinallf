@@ -1,6 +1,6 @@
 import { Webhook } from 'svix';
 import { headers } from 'next/headers';
-import { clerkClient } from '@clerk/nextjs';
+import { clerkClient } from '@clerk/backend';
 import dbConnect from '@/utils/mongoose';
 import User from '@/models/User';
 import { NextResponse } from 'next/server';
