@@ -106,10 +106,14 @@ export default function Cart() {
   const handleCheckoutItem = async (productId) => {
     try {
       setError(null);
+      if (!user?.id) throw new Error('User ID is missing.');
+
       const token = await getToken();
       if (!token) throw new Error('Authentication token missing.');
 
       const product = cart.products.find((p) => p.item._id === productId);
+
+      if (!product) throw new Error('Product not found in cart.');
 
       const cartItems = [
         {
@@ -123,7 +127,7 @@ export default function Cart() {
         {
           cartItems,
           metadata: {
-            userId: user?.id,
+            userId: user.id,
             cartItems: JSON.stringify(cartItems),
           },
         },
@@ -145,6 +149,8 @@ export default function Cart() {
   const handleCheckoutAll = async () => {
     try {
       setError(null);
+      if (!user?.id) throw new Error('User ID is missing.');
+
       const token = await getToken();
       if (!token) throw new Error('Authentication token missing.');
 
@@ -158,7 +164,7 @@ export default function Cart() {
         {
           cartItems,
           metadata: {
-            userId: user?.id,
+            userId: user.id,
             cartItems: JSON.stringify(cartItems),
           },
         },
@@ -176,7 +182,6 @@ export default function Cart() {
     }
   };
 
-  // Prevent conditional hooks rendering issues
   if (!isLoaded || isLoading) {
     return <div>Loading...</div>;
   }

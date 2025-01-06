@@ -11,12 +11,12 @@ export async function POST(req) {
 
     const { cartItems, userId } = await req.json();
 
-    if (!cartItems || !cartItems.length) {
+    if (!cartItems || cartItems.length === 0) {
       return NextResponse.json({ error: 'No items in cart' }, { status: 400 });
     }
 
     if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+      return NextResponse.json({ error: 'User ID is requireds' }, { status: 400 });
     }
 
     // Fetch products from the database to ensure accurate data
@@ -32,7 +32,7 @@ export async function POST(req) {
             product_data: {
               name: product.name,
               description: product.description,
-              images: [product.image], // Optional, add product image
+              images: product.image ? [product.image] : [], // Ensure image is optional
             },
             unit_amount: Math.round(product.price * 100), // Stripe expects price in cents
           },
@@ -56,7 +56,7 @@ export async function POST(req) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error('Stripe Checkout Error:', error);
+    console.error('Stripe Checkout Error:', error.message);
     return NextResponse.json(
       { error: `Failed to create Stripe checkout session: ${error.message}` },
       { status: 500 }
