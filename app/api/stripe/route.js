@@ -11,7 +11,8 @@ export async function POST(req) {
 
     const { cartItems, userId } = await req.json();
 
-    if (!cartItems || !cartItems.length) {
+    // Validate request data
+    if (!cartItems || cartItems.length === 0) {
       return NextResponse.json({ error: 'No items in cart' }, { status: 400 });
     }
 
@@ -19,20 +20,24 @@ export async function POST(req) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    // Fetch products from the database to ensure accurate data
+    // Fetch and validate products from the database
     const lineItems = await Promise.all(
       cartItems.map(async (item) => {
         const product = await Product.findById(item.productId);
         if (!product) {
           throw new Error(`Product with ID ${item.productId} not found`);
         }
+        if (item.quantity <= 0) {
+          throw new Error(`Invalid quantity for product ID ${item.productId}`);
+        }
+
         return {
           price_data: {
             currency: 'usd',
             product_data: {
               name: product.name,
               description: product.description,
-              images: [product.image], // Optional, add product image
+              images: product.image ? [product.image] : [], // Ensure image is optional
             },
             unit_amount: Math.round(product.price * 100), // Stripe expects price in cents
           },
@@ -56,7 +61,9 @@ export async function POST(req) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error('Stripe Checkout Error:', error);
+    console.error('Stripe Checkout Error:', error.message);
+
+    // Return detailed error response
     return NextResponse.json(
       { error: `Failed to create Stripe checkout session: ${error.message}` },
       { status: 500 }
