@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/backend": "^1.21.4",
     "@clerk/nextjs": "^6.8.2",
     "@gsap/react": "^2.1.1",
     "@stripe/stripe-js": "^5.4.0",
