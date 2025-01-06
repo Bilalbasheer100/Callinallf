@@ -10,7 +10,7 @@ export default function Cart() {
   const [error, setError] = useState(null); // Error state
   const [isLoading, setIsLoading] = useState(true); // Loading state for fetch operations
 
-  const { isLoaded, isSignedIn } = useUser(); // Clerk user state
+  const { isLoaded, isSignedIn, user } = useUser(); // Clerk user state
   const { getToken } = useAuth(); // Clerk token getter
 
   // Effect: Fetch cart items
@@ -115,18 +115,26 @@ export default function Cart() {
 
       const product = cart.products.find((p) => p.item._id === productId);
 
+      const cartItems = [
+        {
+          productId: productId,
+          quantity: product.quantity,
+        },
+      ];
+
       const response = await axios.post(
         '/api/stripe',
         {
-          cartItems: [
-            {
-              productId: productId,
-              quantity: product.quantity,
-            },
-          ],
+          cartItems,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
+          data: {
+            metadata: {
+              userId: user.id, // User ID
+              cartItems: JSON.stringify(cartItems), // Cart items as JSON string
+            },
+          },
         }
       );
 
@@ -156,6 +164,12 @@ export default function Cart() {
         { cartItems },
         {
           headers: { Authorization: `Bearer ${token}` },
+          data: {
+            metadata: {
+              userId: user.id, // User ID
+              cartItems: JSON.stringify(cartItems), // Cart items as JSON string
+            },
+          },
         }
       );
 
