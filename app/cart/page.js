@@ -126,15 +126,13 @@ export default function Cart() {
         '/api/stripe',
         {
           cartItems,
+          metadata: {
+            userId: user?.id, // User ID
+            cartItems: JSON.stringify(cartItems), // Cart items as JSON string
+          },
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-          data: {
-            metadata: {
-              userId: user.id, // User ID
-              cartItems: JSON.stringify(cartItems), // Cart items as JSON string
-            },
-          },
         }
       );
 
@@ -161,15 +159,15 @@ export default function Cart() {
 
       const response = await axios.post(
         '/api/stripe',
-        { cartItems },
+        {
+          cartItems,
+          metadata: {
+            userId: user?.id, // User ID
+            cartItems: JSON.stringify(cartItems), // Cart items as JSON string
+          },
+        },
         {
           headers: { Authorization: `Bearer ${token}` },
-          data: {
-            metadata: {
-              userId: user.id, // User ID
-              cartItems: JSON.stringify(cartItems), // Cart items as JSON string
-            },
-          },
         }
       );
 
