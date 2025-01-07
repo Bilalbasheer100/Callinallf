@@ -125,42 +125,93 @@
 //   return new Response(JSON.stringify({ received: true }), { status: 200 });
 // }
 
-import { buffer } from 'micro';
-import Stripe from 'stripe';
+// import { buffer } from 'micro';
+// import Stripe from 'stripe';
+// import dbConnect from '@/utils/mongoose';
+// import Order from '@/models/Order';
+
+// const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+// export const config = {
+//   api: {
+//     bodyParser: false,
+//   },
+// };
+
+// export async function POST(req) {
+//   let event;
+
+//   try {
+//     const buf = await buffer(req); // Parse the raw body
+//     const sig = req.headers['stripe-signature']; // Get Stripe signature
+//     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+//     console.log('Raw body:', buf.toString()); // Log raw body for debugging
+//     console.log('Stripe Signature:', sig);
+
+//     // Verify the webhook signature
+//     event = stripe.webhooks.constructEvent(buf, sig, endpointSecret);
+//     console.log('Webhook verified successfully:', event.type);
+//   } catch (err) {
+//     console.error('Webhook signature verification failed:', err.message);
+//     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+//   }
+
+//   // Handle the event
+//   switch (event.type) {
+//     case 'checkout.session.completed': {
+//       const session = event.data.object;
+
+//       try {
+//         await dbConnect();
+//         const order = new Order({
+//           userId: session.metadata.userId,
+//           products: JSON.parse(session.metadata.cartItems),
+//           totalAmount: session.amount_total / 100, // Stripe uses cents
+//           paymentStatus: session.payment_status,
+//         });
+
+//         await order.save();
+//         console.log('Order saved successfully:', order);
+//       } catch (err) {
+//         console.error('Error saving order to database:', err.message);
+//         return new Response('Error saving order', { status: 500 });
+//       }
+//       break;
+//     }
+//     default:
+//       console.log(`Unhandled event type: ${event.type}`);
+//   }
+
+//   return new Response(JSON.stringify({ received: true }), { status: 200 });
+// }
+
+
+import stripe from 'stripe'
+import { NextResponse } from 'next/server'
 import dbConnect from '@/utils/mongoose';
 import Order from '@/models/Order';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+export async function POST(request) {
+  const body = await request.text()
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+  const sig = request.headers.get('stripe-signature')
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-export async function POST(req) {
-  let event;
+  let event
 
   try {
-    const buf = await buffer(req); // Parse the raw body
-    const sig = req.headers['stripe-signature']; // Get Stripe signature
-    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-    console.log('Raw body:', buf.toString()); // Log raw body for debugging
-    console.log('Stripe Signature:', sig);
-
-    // Verify the webhook signature
-    event = stripe.webhooks.constructEvent(buf, sig, endpointSecret);
-    console.log('Webhook verified successfully:', event.type);
+    event = stripe.webhooks.constructEvent(body, sig, endpointSecret)
   } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
-    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+    return NextResponse.json({ message: 'Webhook error', error: err })
   }
 
-  // Handle the event
-  switch (event.type) {
-    case 'checkout.session.completed': {
-      const session = event.data.object;
+  // Get the ID and type
+  const eventType = event.type
+
+  // CREATE
+  if (eventType === 'checkout.session.completed') {
+    const session = event.data.object;
 
       try {
         await dbConnect();
@@ -177,11 +228,6 @@ export async function POST(req) {
         console.error('Error saving order to database:', err.message);
         return new Response('Error saving order', { status: 500 });
       }
-      break;
     }
-    default:
-      console.log(`Unhandled event type: ${event.type}`);
-  }
-
-  return new Response(JSON.stringify({ received: true }), { status: 200 });
+  return new Response('', { status: 200 })
 }
