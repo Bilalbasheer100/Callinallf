@@ -107,15 +107,12 @@
 //   return NextResponse.json({ message: 'Unhandled event type' }, { status: 200 });
 // }
 
-
 import { Webhook } from 'svix';
 import { headers } from 'next/headers';
+import { clerkClient } from '@clerk/clerk-sdk-node'; // Correct import for Clerk
 import dbConnect from '@/utils/mongoose';
 import User from '@/models/User';
 import { NextResponse } from 'next/server';
-import { Clerk } from '@clerk/clerk-sdk-node'; // Updated import
-
-const clerk = new Clerk({ apiKey: process.env.CLERK_SECRET_KEY }); // Initialize Clerk with CLERK_SECRET_KEY
 
 // Webhook handler
 export async function POST(req) {
@@ -134,12 +131,14 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Missing Svix headers' }, { status: 400 });
   }
 
-  const payload = await req.text(); // Stripe requires raw body
+  const payload = await req.json();
+  const body = JSON.stringify(payload);
+
   const wh = new Webhook(WEBHOOK_SECRET);
   let evt;
 
   try {
-    evt = wh.verify(payload, {
+    evt = wh.verify(body, {
       'svix-id': svix_id,
       'svix-timestamp': svix_timestamp,
       'svix-signature': svix_signature,
@@ -152,7 +151,7 @@ export async function POST(req) {
   const { id } = evt.data;
   const eventType = evt.type;
 
-  await dbConnect(); // Connect to the database
+  await dbConnect();
 
   if (eventType === 'user.created') {
     const { email_addresses, image_url, first_name, last_name, username } = evt.data;
@@ -169,8 +168,8 @@ export async function POST(req) {
     try {
       const savedUser = await newUser.save();
 
-      // Update Clerk's user metadata
-      await clerk.users.updateUser(id, {
+      // Update Clerk user metadata
+      await clerkClient.users.updateUserMetadata(id, {
         publicMetadata: {
           userId: savedUser._id,
         },
