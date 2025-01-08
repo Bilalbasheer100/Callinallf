@@ -14,7 +14,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="min-h-screen bg-[#EEECED]">
-        <ClerkProvider>
+        <ClerkProvider
+        afterSignInUrl="/redirect-handler"
+      afterSignUpUrl="/redirect-handler"
+        >
           {!isAdminPage && <Navbar />}
           <main>{children}</main>
         </ClerkProvider>
