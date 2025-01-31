@@ -200,6 +200,7 @@ export async function POST(req) {
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
+      billing_address_collection: 'required', // ⬅️ Ensure Stripe collects billing address
       customer_email: customerEmail,
       line_items: lineItems,
       mode: 'payment',
@@ -208,10 +209,10 @@ export async function POST(req) {
       metadata: {
         userId,
         cartItems: JSON.stringify(cartItems),
-        customerEmail,
-        billingAddress: JSON.stringify(billingAddress),
+        customerEmail, 
       },
     });
+    
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
