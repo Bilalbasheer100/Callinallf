@@ -88,15 +88,25 @@ export default function ProductList() {
 
   const handleDeleteProduct = async (productId) => {
     try {
-      await axios.delete(`/api/products?id=${productId}`);
-      setProducts((prevProducts) =>
-        prevProducts.filter((product) => product._id !== productId)
-      );
+      const response = await axios.delete(`/api/products?id=${productId}`);
+      
+      if (response.status === 200) {
+        setProducts((prevProducts) =>
+          prevProducts.filter((product) => product._id !== productId)
+        );
+      }
     } catch (err) {
       console.error('Error deleting product:', err);
-      setError('Failed to delete product. Please try again.');
+  
+      // Check if API response contains a specific error message
+      if (err.response && err.response.data && err.response.data.error) {
+        setError(err.response.data.error);
+      } else {
+        setError('Failed to delete product. Please try again.');
+      }
     }
   };
+  
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
