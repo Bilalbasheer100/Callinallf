@@ -267,11 +267,18 @@ export async function POST(request) {
         products: JSON.parse(session.metadata.cartItems),
         totalAmount: session.amount_total / 100,
         paymentStatus: session.payment_status,
-        paymentMethod: session.payment_method_types[0], // Store the payment method
-        transactionId: session.id, // Stripe session ID (useful for refunds)
-        customerEmail: session.metadata.customerEmail,
-        billingAddress: JSON.parse(session.metadata.billingAddress), // Store billing details
+        paymentMethod: session.payment_method_types[0],
+        transactionId: session.id,
+        customerEmail: session.customer_email, 
+        billingAddress: {
+          country: session.customer_details.address?.country || '',
+          city: session.customer_details.address?.city || '',
+          address1: session.customer_details.address?.line1 || '',
+          address2: session.customer_details.address?.line2 || '',
+          postalCode: session.customer_details.address?.postal_code || 'N/A', // Default if missing
+        },
       });
+      
 
       await order.save();
       console.log('Order saved successfully:', order);
