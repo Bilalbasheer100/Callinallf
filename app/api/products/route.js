@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/utils/mongoose';
 import Product from '@/models/Product';
+import Cart from '@/models/Cart';
 
 // GET Products or a Single Product with Search and Filters
 export async function GET(req) {
@@ -118,10 +119,6 @@ export async function PUT(req) {
   }
 }
 
-
-
-
-// DELETE a Product
 export async function DELETE(req) {
   try {
     await dbConnect();
@@ -131,15 +128,30 @@ export async function DELETE(req) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
     }
 
-    const deletedProduct = await Product.findByIdAndDelete(id);
-
-    if (!deletedProduct) {
+    // Find the product
+    const product = await Product.findById(id);
+    if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ message: 'Product deleted successfully' }, { status: 200 });
+    // Prevent deletion if the product is featured
+    if (product.featured) {
+      console.log(`Attempted to delete featured product: ${id}`);
+      return NextResponse.json({ error: 'Featured products cannot be deleted' }, { status: 400 });
+    }
+
+    // Delete the product
+    await Product.findByIdAndDelete(id);
+
+    // Remove the product from all carts
+    await Cart.updateMany(
+      { 'products.item': id },
+      { $pull: { products: { item: id } } }
+    );
+
+    return NextResponse.json({ message: 'Product deleted successfully and removed from all carts' }, { status: 200 });
   } catch (error) {
     console.error('DELETE Error:', error);
-    return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to delete product', details: error.message }, { status: 500 });
   }
 }

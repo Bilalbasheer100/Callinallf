@@ -187,47 +187,99 @@
 // }
 
 
-import stripe from 'stripe'
-import { NextResponse } from 'next/server'
+// import stripe from 'stripe'
+// import { NextResponse } from 'next/server'
+// import dbConnect from '@/utils/mongoose';
+// import Order from '@/models/Order';
+
+// export async function POST(request) {
+//   const body = await request.text()
+
+//   const sig = request.headers.get('stripe-signature')
+//   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+//   let event
+
+//   try {
+//     event = stripe.webhooks.constructEvent(body, sig, endpointSecret)
+//   } catch (err) {
+//     return NextResponse.json({ message: 'Webhook error', error: err })
+//   }
+
+//   // Get the ID and type
+//   const eventType = event.type
+
+//   // CREATE
+//   if (eventType === 'checkout.session.completed') {
+//     const session = event.data.object;
+
+//       try {
+//         await dbConnect();
+//         const order = new Order({
+//           userId: session.metadata.userId,
+//           products: JSON.parse(session.metadata.cartItems),
+//           totalAmount: session.amount_total / 100, // Stripe uses cents
+//           paymentStatus: session.payment_status,
+//         });
+
+//         await order.save();
+//         console.log('Order saved successfully:', order);
+//       } catch (err) {
+//         console.error('Error saving order to database:', err.message);
+//         return new Response('Error saving order', { status: 500 });
+//       }
+//     }
+//   return new Response('', { status: 200 })                              
+// }
+
+
+
+
+import Stripe from 'stripe';
+import { NextResponse } from 'next/server';
 import dbConnect from '@/utils/mongoose';
 import Order from '@/models/Order';
 
-export async function POST(request) {
-  const body = await request.text()
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-  const sig = request.headers.get('stripe-signature')
+export async function POST(request) {
+  const body = await request.text();
+  const sig = request.headers.get('stripe-signature');
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  let event
+  let event;
 
   try {
-    event = stripe.webhooks.constructEvent(body, sig, endpointSecret)
+    event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
   } catch (err) {
-    return NextResponse.json({ message: 'Webhook error', error: err })
+    console.error('Webhook error:', err.message);
+    return NextResponse.json({ message: 'Webhook signature verification failed', error: err.message }, { status: 400 });
   }
 
-  // Get the ID and type
-  const eventType = event.type
-
-  // CREATE
-  if (eventType === 'checkout.session.completed') {
+  if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
 
-      try {
-        await dbConnect();
-        const order = new Order({
-          userId: session.metadata.userId,
-          products: JSON.parse(session.metadata.cartItems),
-          totalAmount: session.amount_total / 100, // Stripe uses cents
-          paymentStatus: session.payment_status,
-        });
+    try {
+      await dbConnect();
 
-        await order.save();
-        console.log('Order saved successfully:', order);
-      } catch (err) {
-        console.error('Error saving order to database:', err.message);
-        return new Response('Error saving order', { status: 500 });
-      }
+      const order = new Order({
+        userId: session.metadata.userId,
+        products: JSON.parse(session.metadata.cartItems),
+        totalAmount: session.amount_total / 100,
+        paymentStatus: session.payment_status,
+        paymentMethod: session.payment_method_types[0], // Store the payment method
+        transactionId: session.id, // Stripe session ID (useful for refunds)
+        customerEmail: session.metadata.customerEmail,
+        billingAddress: JSON.parse(session.metadata.billingAddress), // Store billing details
+      });
+
+      await order.save();
+      console.log('Order saved successfully:', order);
+    } catch (err) {
+      console.error('Error saving order to database:', err.message);
+      return NextResponse.json({ message: 'Error saving order', error: err.message }, { status: 500 });
     }
-  return new Response('', { status: 200 })
+  }
+
+  return NextResponse.json({ message: 'Webhook received' }, { status: 200 });
 }

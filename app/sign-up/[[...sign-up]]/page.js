@@ -16,7 +16,7 @@ export default function SignUpPage() {
           path="/sign-up"
           routing="path"
           signInUrl="/sign-in"
-          fallbackRedirectUrl="/products" // Always redirect general users to products
+          redirectTo="/redirect-handler" // Redirect to the handler for dynamic routing
           appearance={{
             layout: {
               logoPlacement: 'top',

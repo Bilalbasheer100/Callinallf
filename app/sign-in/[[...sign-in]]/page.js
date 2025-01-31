@@ -13,28 +13,25 @@ export default function SignInPage() {
           Please sign in to continue to your account
         </p>
         <SignIn
-          path="/sign-in"
-          routing="path"
-          signUpUrl="/sign-up"
-          fallbackRedirectUrl={(session) => {
-            const role = session?.user?.publicMetadata?.role;
-            return role === 'admin' ? '/admin/products' : '/products';
-          }} // Redirect based on user role
-          appearance={{
-            layout: {
-              logoPlacement: 'top',
-              socialButtonsPlacement: 'bottom',
-              showOptionalFields: false,
-            },
-            elements: {
-              card: 'shadow-lg rounded-lg border border-gray-200',
-              formFieldInput: 'rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500',
-              formButtonPrimary:
-                'bg-blue-600 text-white rounded-md py-2 px-4 hover:bg-blue-700 transition',
-              formHeaderTitle: 'text-lg font-semibold text-gray-800',
-            },
-          }}
-        />
+  path="/sign-in"
+  routing="path"
+  signUpUrl="/sign-up"
+  redirectTo="/redirect-handler" // Handle dynamic redirects in `RedirectHandler`
+  appearance={{
+    layout: {
+      logoPlacement: 'top',
+      socialButtonsPlacement: 'bottom',
+      showOptionalFields: false,
+    },
+    elements: {
+      card: 'shadow-lg rounded-lg border border-gray-200',
+      formFieldInput: 'rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500',
+      formButtonPrimary:
+        'bg-blue-600 text-white rounded-md py-2 px-4 hover:bg-blue-700 transition',
+      formHeaderTitle: 'text-lg font-semibold text-gray-800',
+    },
+  }}
+/>
       </div>
     </div>
   );
