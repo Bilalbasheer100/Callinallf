@@ -406,35 +406,66 @@ export default function Cart() {
     }
   };
 
-  // Checkout single item
+  // // Checkout single item
+  // const handleCheckoutItem = async (productId) => {
+  //   try {
+  //     setError(null);
+  //     if (!user?.id) throw new Error('User ID is missing.');
+
+  //     const token = await getToken();
+  //     if (!token) throw new Error('Authentication token missing.');
+
+  //     const product = cart.products.find((p) => p.item._id === productId);
+  //     if (!product) throw new Error('Product not found in cart.');
+
+  //     const cartItems = [{ productId, quantity: product.quantity }];
+
+  //     const response = await axios.post(
+  //       '/api/stripe',
+  //       { cartItems, userId: user.id },
+  //       { headers: { Authorization: `Bearer ${token}` } }
+  //     );
+
+  //     if (response.status === 200) {
+  //       window.location.href = response.data.url;
+  //     }
+  //   } catch (err) {
+  //     console.error('Checkout Item Error:', err.response?.data || err.message);
+  //     setError('Failed to proceed to checkout. Please try again.');
+  //   }
+  // };
+
+
   const handleCheckoutItem = async (productId) => {
     try {
       setError(null);
       if (!user?.id) throw new Error('User ID is missing.');
-
+  
       const token = await getToken();
       if (!token) throw new Error('Authentication token missing.');
-
+  
       const product = cart.products.find((p) => p.item._id === productId);
       if (!product) throw new Error('Product not found in cart.');
-
+  
       const cartItems = [{ productId, quantity: product.quantity }];
-
+  
       const response = await axios.post(
         '/api/stripe',
         { cartItems, userId: user.id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
+  
       if (response.status === 200) {
         window.location.href = response.data.url;
+      } else {
+        throw new Error(`Unexpected status code: ${response.status}`);
       }
     } catch (err) {
       console.error('Checkout Item Error:', err.response?.data || err.message);
-      setError('Failed to proceed to checkout. Please try again.');
+      setError(`Checkout failed: ${err.response?.data?.error || err.message}`);
     }
   };
-
+  
   // Checkout all items
   const handleCheckoutAll = async () => {
     try {
