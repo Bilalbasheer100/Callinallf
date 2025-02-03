@@ -306,6 +306,7 @@ export default function Cart() {
 
   const { isLoaded, isSignedIn, user } = useUser(); // Clerk user state
   const { getToken } = useAuth(); // Clerk token getter
+  
 
   // Debugging: Log user state
   useEffect(() => {
@@ -451,7 +452,7 @@ export default function Cart() {
   
       const response = await axios.post(
         '/api/stripe',
-        { cartItems, userId: user.id ,customerEmail: user.email},
+        { cartItems, userId: user.id ,customerEmail: user.emailAddress},
         { headers: { Authorization: `Bearer ${token}` } }
       );
   
