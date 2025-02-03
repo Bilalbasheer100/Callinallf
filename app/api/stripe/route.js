@@ -160,7 +160,7 @@ export async function POST(req) {
   try {
     await dbConnect();
     
-    const { cartItems, userId,customerEmail} = await req.json(); // Removed customerEmail and billingAddress
+    const { cartItems, userId, customerEmail} = await req.json(); // Removed customerEmail and billingAddress
 
     console.log("Received checkout request:", { userId, cartItems });
 
