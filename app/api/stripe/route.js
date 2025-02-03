@@ -203,9 +203,6 @@ export async function POST(req) {
       mode: 'payment',
       // Configure Stripe to collect the billing address.
       billing_address_collection: 'required',
-      // Optionally, if you want to prefill the email (if you have it), you can include it.
-      // If you leave this out, Stripe will prompt the customer for an email.
-      // customer_email: customerEmail,
       customer_email: customerEmail, // Prefill email if available
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cart`,

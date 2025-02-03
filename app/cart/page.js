@@ -307,6 +307,12 @@ export default function Cart() {
   const { isLoaded, isSignedIn, user } = useUser(); // Clerk user state
   const { getToken } = useAuth(); // Clerk token getter
 
+  const primaryEmail =
+  user.primaryEmailAddress?.emailAddress ||
+  (user.emailAddresses && user.emailAddresses.length > 0
+    ? user.emailAddresses[0].emailAddress
+    : null);
+
   // Debugging: Log user state
   useEffect(() => {
     if (isLoaded) {
@@ -451,7 +457,7 @@ export default function Cart() {
   
       const response = await axios.post(
         '/api/stripe',
-        { cartItems, userId: user.id ,customerEmail: user.email},
+        { cartItems, userId: user.id ,customerEmail: primaryEmail},
         { headers: { Authorization: `Bearer ${token}` } }
       );
   
