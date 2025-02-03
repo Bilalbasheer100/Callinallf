@@ -451,7 +451,7 @@ export default function Cart() {
   
       const response = await axios.post(
         '/api/stripe',
-        { cartItems, userId: user.id },
+        { cartItems, userId: user.id ,customerEmail: user.email},
         { headers: { Authorization: `Bearer ${token}` } }
       );
   

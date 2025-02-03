@@ -160,7 +160,7 @@ export async function POST(req) {
   try {
     await dbConnect();
     
-    const { cartItems, userId } = await req.json(); // Removed customerEmail and billingAddress
+    const { cartItems, userId,customerEmail} = await req.json(); // Removed customerEmail and billingAddress
 
     console.log("Received checkout request:", { userId, cartItems });
 
@@ -206,6 +206,7 @@ export async function POST(req) {
       // Optionally, if you want to prefill the email (if you have it), you can include it.
       // If you leave this out, Stripe will prompt the customer for an email.
       // customer_email: customerEmail,
+      customer_email: customerEmail, // Prefill email if available
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cart`,
       metadata: {
