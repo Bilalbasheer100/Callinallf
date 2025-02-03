@@ -294,6 +294,72 @@
 
 
 
+// import Stripe from 'stripe';
+// import { NextResponse } from 'next/server';
+// import dbConnect from '@/utils/mongoose';
+// import Order from '@/models/Order';
+
+// const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+// export async function POST(request) {
+//   const body = await request.text();
+//   const sig = request.headers.get('stripe-signature');
+//   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+//   let event;
+
+//   try {
+//     event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
+//   } catch (err) {
+//     console.error('Webhook error:', err.message);
+//     return NextResponse.json({ message: 'Webhook signature verification failed', error: err.message }, { status: 400 });
+//   }
+
+//   if (event.type === 'checkout.session.completed') {
+//     const session = event.data.object;
+
+//     try {
+//       await dbConnect();
+
+//       // Ensure customer_email is present
+//       if (!session.customer_email) {
+//         // Retrieve the session with expanded fields
+//         const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+//           expand: ['customer'],
+//         });
+//         session.customer_email = fullSession.customer.email;
+//       }
+
+//       const order = new Order({
+//         userId: session.metadata.userId,
+//         products: JSON.parse(session.metadata.cartItems),
+//         totalAmount: session.amount_total / 100,
+//         paymentStatus: session.payment_status,
+//         paymentMethod: session.payment_method_types[0],
+//         transactionId: session.id,
+//         customerEmail: session.customer_email,
+//         billingAddress: {
+//           country: session.customer_details.address?.country || '',
+//           city: session.customer_details.address?.city || '',
+//           address1: session.customer_details.address?.line1 || '',
+//           address2: session.customer_details.address?.line2 || '',
+//           postalCode: session.customer_details.address?.postal_code || 'N/A',
+//         },
+//       });
+
+//       await order.save();
+//       console.log('Order saved successfully:', order);
+//     } catch (err) {
+//       console.error('Error saving order to database:', err.message);
+//       return NextResponse.json({ message: 'Error saving order', error: err.message }, { status: 500 });
+//     }
+//   }
+
+//   return NextResponse.json({ message: 'Webhook received' }, { status: 200 });
+// }
+
+
+
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import dbConnect from '@/utils/mongoose';
@@ -312,7 +378,10 @@ export async function POST(request) {
     event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
   } catch (err) {
     console.error('Webhook error:', err.message);
-    return NextResponse.json({ message: 'Webhook signature verification failed', error: err.message }, { status: 400 });
+    return NextResponse.json(
+      { message: 'Webhook signature verification failed', error: err.message },
+      { status: 400 }
+    );
   }
 
   if (event.type === 'checkout.session.completed') {
@@ -321,13 +390,19 @@ export async function POST(request) {
     try {
       await dbConnect();
 
-      // Ensure customer_email is present
-      if (!session.customer_email) {
-        // Retrieve the session with expanded fields
-        const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
-          expand: ['customer'],
-        });
-        session.customer_email = fullSession.customer.email;
+      // Fetch session details to get customer email if missing
+      let customerEmail = session.customer_email;
+      if (!customerEmail) {
+        try {
+          const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+            expand: ['customer'],
+          });
+
+          customerEmail = fullSession.customer?.email || 'unknown@example.com'; // Default value if email is missing
+        } catch (error) {
+          console.error('Failed to retrieve full session details:', error.message);
+          customerEmail = 'unknown@example.com'; // Fallback value
+        }
       }
 
       const order = new Order({
@@ -337,13 +412,13 @@ export async function POST(request) {
         paymentStatus: session.payment_status,
         paymentMethod: session.payment_method_types[0],
         transactionId: session.id,
-        customerEmail: session.customer_email,
+        customerEmail, // Use fetched or default email
         billingAddress: {
-          country: session.customer_details.address?.country || '',
-          city: session.customer_details.address?.city || '',
-          address1: session.customer_details.address?.line1 || '',
-          address2: session.customer_details.address?.line2 || '',
-          postalCode: session.customer_details.address?.postal_code || 'N/A',
+          country: session.customer_details?.address?.country || '',
+          city: session.customer_details?.address?.city || '',
+          address1: session.customer_details?.address?.line1 || '',
+          address2: session.customer_details?.address?.line2 || '',
+          postalCode: session.customer_details?.address?.postal_code || 'N/A',
         },
       });
 
